@@ -1,4 +1,4 @@
-# RISC-V Single-Cycle CPU
+# RV32I-Subset CPU RTL Design and Verification
 
 This project implements a simple 32-bit single-cycle RISC-V CPU in Verilog. The goal is to build and test a small RV32I-style processor with a modular datapath and control unit.
 
