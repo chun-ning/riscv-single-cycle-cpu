@@ -15,6 +15,8 @@ The CPU is designed as a single-cycle processor, meaning each instruction comple
 - Data memory
 - Writeback logic
 
+![CPU Diagram](docs/rv32i_datapath.png)
+
 ## Supported Instructions
 
 This project currently supports a small subset of RISC-V instructions, including:
