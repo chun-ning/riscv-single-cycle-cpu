@@ -1,4 +1,13 @@
-module alu(input [31:0]a, input [31:0]b, input [3:0]alu_ctrl, output reg [31:0]out, output reg zero, output reg carry, output reg overflow, output reg negative);
+module alu(
+    input [31:0]a, 
+    input [31:0]b, 
+    input [3:0]alu_ctrl, 
+    output reg [31:0]out, 
+    output reg zero, 
+    output reg carry, 
+    output reg overflow, 
+    output reg negative
+    );
     
     reg [32:0]temp;
 
