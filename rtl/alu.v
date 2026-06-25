@@ -6,7 +6,7 @@ module alu(input [31:0]a, input [31:0]b, input [3:0]alu_ctrl, output reg [31:0]o
         // default
         out = 32'b0;
         zero = 1'b0;
-        carry = 1'b0; 
+        carry = 1'b0;
         overflow = 1'b0;
         negative = 1'b0;
         temp = 33'b0;
@@ -20,7 +20,8 @@ module alu(input [31:0]a, input [31:0]b, input [3:0]alu_ctrl, output reg [31:0]o
                 // signed overflow for addition
                 overflow = (a[31] == b[31]) && (out[31] != a[31]);
             end
-            4'h1: begin                                             // sub
+            4'h1: begin   
+                temp = {1'b0, a} - {1'b0, b};                       // sub
                 out = temp[31:0];
 
                 // carry = 1 when no borrow
