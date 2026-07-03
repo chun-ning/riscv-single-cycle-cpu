@@ -30,7 +30,7 @@ tb_control:
 	$(IVERILOG) -o $(BUILD_DIR)/tb_control $(TB_DIR)/tb_control.v $(RTL_DIR)/control.v
 	$(VVP) $(BUILD_DIR)/tb_control
 
-# Run all  tests
+# Run all tests
 test_all: tb_alu tb_regfile tb_imm_gen tb_control
 
 # Open waveforms
@@ -44,7 +44,7 @@ wave_imm_gen:
 	$(GTKWAVE) $(WAVE_DIR)/imm_gen.vcd
 
 wave_control:
-	$(GTKWAVE) $(WAVE_DIR)/imm_control.vcd
+	$(GTKWAVE) $(WAVE_DIR)/control.vcd
 
 # Clean generated files
 clean:
