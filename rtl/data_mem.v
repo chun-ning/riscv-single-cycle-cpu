@@ -3,7 +3,7 @@ module data_mem(
     input mem_write,
     input [31:0] addr,
     input [31:0] write_data,
-    output [31:0] read_data;
+    output [31:0] read_data
 );
     reg [31:0] mem [0:511];
 
