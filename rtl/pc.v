@@ -11,9 +11,9 @@ module pc(
         if (reset) begin
             pc <= 32'h0;
         end else if (jump || branch) begin
-            pc <= pc += imm;
+            pc <= pc + imm;
         end else begin
-            pc <= pc += 32'd4;
+            pc <= pc + 32'd4;
         end
     end
 
