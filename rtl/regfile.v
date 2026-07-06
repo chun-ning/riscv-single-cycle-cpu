@@ -1,12 +1,12 @@
 module regfile(
     input clk, 
     input w_en,             // regfile allowed to write when w_en = 1
-    input  [4:0]rs1,        // 32 registers --> 5 bits
-    input  [4:0]rs2, 
-    input  [4:0]rd, 
-    input  [31:0]w_data,    // write data
-    output [31:0]rv1,       // read value (of rs1)
-    output [31:0]rv2        // read value (of rs2)
+    input  [4:0] rs1,        // 32 registers --> 5 bits
+    input  [4:0] rs2, 
+    input  [4:0] rd, 
+    input  [31:0] w_data,    // write data
+    output [31:0] rv1,       // read value (of rs1)
+    output [31:0] rv2        // read value (of rs2)
     );
 
     reg [31:0] regs [0:31]; // 32-bit registers * 32
