@@ -3,6 +3,7 @@
 module tb_data_mem;
 
     reg clk;
+    reg mem_read;
     reg mem_write;
     reg [31:0] addr;
     reg [31:0] write_data;
@@ -12,6 +13,7 @@ module tb_data_mem;
 
     data_mem dut(
         .clk(clk),
+        .mem_read(mem_read),
         .mem_write(mem_write),
         .addr(addr),
         .write_data(write_data),
@@ -45,6 +47,7 @@ module tb_data_mem;
         errors = 0;
         // Initial values
         clk = 0;
+        mem_read = 1'b0;
         mem_write = 1'b0;
         addr = 32'd8;
         write_data = 32'd2;
@@ -52,6 +55,7 @@ module tb_data_mem;
         $display("Starting data_mem test...");
 
         // Test 1: writing 2 to mem[2]
+        mem_read = 1'b1;
         mem_write = 1'b1;
         addr = 32'd8; // mem[2]
         write_data = 32'd2;
@@ -60,6 +64,7 @@ module tb_data_mem;
         check("mem[2] = 2", 32'd2);
 
         // Test 2: writing 3 to mem[2], mem_write = 1'b0 (read only)
+        mem_read = 1'b1;
         mem_write = 1'b0;
         addr = 32'd8; // mem[2]
         write_data = 32'd3;
@@ -68,6 +73,7 @@ module tb_data_mem;
         check("read mem[2]", 32'd2);
 
         // Test 3: writing a bigger data pattern to a different address, mem[3]
+        mem_read = 1'b1;
         mem_write = 1'b1;
         addr = 32'd12; // mem[3]
         write_data = 32'ha5a5_5a5a;
@@ -76,6 +82,7 @@ module tb_data_mem;
         check("mem[3] = a5a5_5a5a", 32'ha5a5_5a5a);
 
         // Test 4: original mem[2] is still unchanged
+        mem_read = 1'b1;
         mem_write = 1'b0;
         addr = 32'd8; // mem[2]
         write_data = 32'hffff_ffff;
@@ -84,6 +91,7 @@ module tb_data_mem;
         check("mem[2] const after mem[3] write", 32'd2);
 
         // Test 5: overwrite existing mem[2] when mem_write = 1
+        mem_read = 1'b1;
         mem_write = 1'b1;
         addr = 32'd8; // mem[2]
         write_data = 32'h1234_5678;
@@ -92,6 +100,7 @@ module tb_data_mem;
         check("overwrite mem[2]", 32'h1234_5678);
 
         // Test 6: read_data changes immediately when addr changes
+        mem_read = 1'b1;
         mem_write = 1'b0;
         addr = 32'd12; // mem[3]
         check("read changes to mem[3]", 32'ha5a5_5a5a);
@@ -110,6 +119,7 @@ module tb_data_mem;
         check("addr 11 aliases mem[2]", 32'h1234_5678);
 
         // Test 8: memory does not change between clock edges
+        mem_read = 1'b1;
         mem_write = 1'b1;
         addr = 32'd8; // mem[2]
         write_data = 32'hdead_beef;
@@ -118,6 +128,16 @@ module tb_data_mem;
 
         @(posedge clk);
         check("write happens at clock edge", 32'hdead_beef);
+
+        // Test 9: mem_read = 0 disables read_data
+        mem_read = 1'b0;
+        mem_write = 1'b0;
+        addr = 32'd8; // mem[2]
+        check("mem_read low disables read", 32'd0);
+
+        // Test 10: stored memory is still present when mem_read returns high
+        mem_read = 1'b1;
+        check("mem_read high re-enables read", 32'hdead_beef);
         
         // FINAL
         if (errors == 0) begin

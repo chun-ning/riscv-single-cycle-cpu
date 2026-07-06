@@ -1,5 +1,6 @@
 module data_mem(
     input clk,
+    input mem_read,
     input mem_write,
     input [31:0] addr,
     input [31:0] write_data,
@@ -7,7 +8,7 @@ module data_mem(
 );
     reg [31:0] mem [0:511];
 
-    assign read_data = mem[addr[10:2]];
+    assign read_data = mem_read ? mem[addr[10:2]] : 32'b0;
 
     always @(posedge clk) begin
         if (mem_write) begin
