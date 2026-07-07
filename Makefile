@@ -45,6 +45,11 @@ tb_instr_mem:
 	$(IVERILOG) -o $(BUILD_DIR)/tb_instr_mem $(TB_DIR)/tb_instr_mem.v $(RTL_DIR)/instr_mem.v
 	$(VVP) $(BUILD_DIR)/tb_instr_mem
 
+tb_cpu:
+	mkdir -p $(BUILD_DIR) $(WAVE_DIR)
+	$(IVERILOG) -o $(BUILD_DIR)/tb_cpu $(TB_DIR)/tb_cpu.v $(RTL_DIR)/*.v
+	$(VVP) $(BUILD_DIR)/tb_cpu
+
 # Run all tests
 test_all: tb_alu tb_regfile tb_imm_gen tb_control
 
@@ -69,6 +74,9 @@ wave_data_mem:
 
 wave_instr_mem:
 	$(GTKWAVE) $(WAVE_DIR)/instr_mem.vcd
+
+wave_cpu:
+	$(GTKWAVE) $(WAVE_DIR)/cpu.vcd
 
 # Clean generated files
 clean:

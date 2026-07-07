@@ -65,7 +65,7 @@ module cpu(
 
     // Branch condition true or not
     reg branch_taken;
-    always @(*) begin;
+    always @(*) begin
         case (func3)
             3'b000: branch_taken = branch && (rs1 == rs2); // beq
             3'b001: branch_taken = branch && (rs1 != rs2); // bne
@@ -86,13 +86,13 @@ module cpu(
     );
 
     // instr_mem
-    instr_mem instr_mem (
+    instr_mem imem (
         .pc(pc_curr),
         .instr(instr)
     );
 
     // regfile
-    regfile regfile (
+    regfile rf (
         .clk(clk),
         .w_en(reg_write),
         .rs1(rs1),
@@ -104,7 +104,7 @@ module cpu(
     );
 
     // control
-    control control (
+    control ctrl (
         .opcode(opcode),
         .func3(func3),
         .func7(func7),
@@ -119,13 +119,13 @@ module cpu(
     );
 
     // imm_gen
-    imm_gen imm_gen (
+    imm_gen igen (
         .instr(instr),
         .imm(imm)
     );
 
     // ALU
-    alu alu (
+    alu alu_mod (
         .a(a),
         .b(b),
         .alu_ctrl(alu_ctrl),
@@ -137,7 +137,7 @@ module cpu(
     );
 
     // data_mem
-    data_mem data_mem (
+    data_mem dmem (
         .clk(clk),
         .mem_read(mem_read),
         .mem_write(mem_write),
