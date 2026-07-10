@@ -4,8 +4,13 @@ module instr_mem(
 );
     reg [31:0] mem [0:511]; // 2KB instruction space
     
+    integer i;
+
     initial begin
-        // $readmemh("tb/programs/add_test.hex", mem);
+        for (i = 0; i < 512; i = i + 1) begin
+            mem[i] = 32'h00000013; // nop: addi x0, x0, 0
+        end
+
         $readmemh("tb/programs/cpu_test.hex", mem);
     end
 
