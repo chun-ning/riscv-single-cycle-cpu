@@ -94,6 +94,7 @@ module cpu(
     // regfile
     regfile rf (
         .clk(clk),
+        .reset(reset),
         .w_en(reg_write),
         .rs1(rs1),
         .rs2(rs2),
@@ -139,6 +140,7 @@ module cpu(
     // data_mem
     data_mem dmem (
         .clk(clk),
+        .reset(reset),
         .mem_read(mem_read),
         .mem_write(mem_write),
         .addr(addr),

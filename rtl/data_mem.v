@@ -1,5 +1,6 @@
 module data_mem(
     input clk,
+    input reset,
     input mem_read,
     input mem_write,
     input [31:0] addr,
@@ -10,8 +11,14 @@ module data_mem(
 
     assign read_data = mem_read ? mem[addr[10:2]] : 32'b0;
 
+    integer i;
+
     always @(posedge clk) begin
-        if (mem_write) begin
+        if (reset) begin
+            for (i = 0; i < 512; i = i + 1) begin
+                mem[i] <= 32'd0;
+            end
+        end else if (mem_write) begin
             mem[addr[10:2]] <= write_data;
         end
     end
