@@ -42,6 +42,9 @@ module cpu(
 
     // imm_gen
     wire [31:0] imm;
+    wire [31:0] pc_imm;
+
+    assign pc_imm = (opcode == 7'b1100111) ? (((rv1 + imm) & 32'hffff_fffe) - pc_curr) : imm;
 
     // ALU
     wire [31:0] a;
@@ -67,10 +70,12 @@ module cpu(
     reg branch_taken;
     always @(*) begin
         case (func3)
-            3'b000: branch_taken = branch && (rs1 == rs2); // beq
-            3'b001: branch_taken = branch && (rs1 != rs2); // bne
-            3'b100: branch_taken = branch && ($signed(rs1) < $signed(rs2)); // blt
-            3'b101: branch_taken = branch && ($signed(rs1) >= $signed(rs2)); // bge
+            3'b000: branch_taken = branch && (rv1 == rv2); // beq
+            3'b001: branch_taken = branch && (rv1 != rv2); // bne
+            3'b100: branch_taken = branch && ($signed(rv1) < $signed(rv2)); // blt
+            3'b101: branch_taken = branch && ($signed(rv1) >= $signed(rv2)); // bge
+            3'b110: branch_taken = branch && (rv1 < rv2); // bltu
+            3'b111: branch_taken = branch && (rv1 >= rv2); // bgeu
             default: branch_taken = 1'b0;
         endcase
     end
@@ -81,7 +86,7 @@ module cpu(
         .reset(reset),
         .branch(branch_taken),
         .jump(jump),
-        .imm(imm),
+        .imm(pc_imm),
         .pc(pc_curr)
     );
 

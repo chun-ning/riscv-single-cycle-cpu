@@ -87,13 +87,13 @@ module tb_imm_gen;
         instr = {1'b1, 10'b0000000000, 1'b1, 8'hff, 5'd1, JAL};
         check("JAL negative imm=-2048", 32'hffff_f800);
 
-        // LUI / U-type, as implemented in rtl/imm_gen.v.
+        // LUI / U-type: immediate goes into bits [31:12].
         instr = {20'h12345, 5'd10, LUI};
-        check("LUI imm[31:12]=0x12345", 32'h0001_2345);
+        check("LUI imm[31:12]=0x12345", 32'h1234_5000);
 
-        // LUI / U-type with sign bit set, as implemented in rtl/imm_gen.v.
+        // LUI / U-type with bit 31 set.
         instr = {20'hf2345, 5'd10, LUI};
-        check("LUI sign-extended imm[31:12]", 32'hffff_2345);
+        check("LUI imm[31:12]=0xf2345", 32'hf234_5000);
 
         // Unsupported opcode
         instr = 32'h0000_0000;

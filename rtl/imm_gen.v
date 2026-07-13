@@ -18,7 +18,7 @@ module imm_gen(
     always @(*) begin
         case(opcode)
             LUI: begin
-                imm = {{20{instr[31]}}, instr[31:12]};
+                imm = {instr[31:12], 12'b0};
             end
             OP_IMM, LOAD: begin
                 imm = {{20{instr[31]}}, instr[31:20]};
