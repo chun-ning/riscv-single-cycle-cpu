@@ -9,6 +9,14 @@ IVERILOG = iverilog
 VVP = vvp
 GTKWAVE = gtkwave
 
+# Assembly to hex flow
+RISCV_PREFIX = riscv64-unknown-elf
+AS      = $(RISCV_PREFIX)-as
+LD      = $(RISCV_PREFIX)-ld
+OBJCOPY = $(RISCV_PREFIX)-objcopy
+OBJDUMP = $(RISCV_PREFIX)-objdump
+PYTHON  = python3
+
 # Run unit testbench
 tb_alu:
 	mkdir -p $(BUILD_DIR) $(WAVE_DIR)
@@ -45,6 +53,18 @@ tb_instr_mem:
 	$(IVERILOG) -o $(BUILD_DIR)/tb_instr_mem $(TB_DIR)/tb_instr_mem.v $(RTL_DIR)/instr_mem.v
 	$(VVP) $(BUILD_DIR)/tb_instr_mem
 
+# CPU
+PROGRAM = cpu_test
+
+program:
+	mkdir -p build tb/programs
+	$(AS) -march=rv32i -mabi=ilp32 -o build/$(PROGRAM).o asm/$(PROGRAM).s
+	$(LD) -m elf32lriscv -Ttext=0x0 -o build/$(PROGRAM).elf build/$(PROGRAM).o
+	$(OBJCOPY) -O binary build/$(PROGRAM).elf build/$(PROGRAM).bin
+	$(PYTHON) tools/bin_to_hex.py build/$(PROGRAM).bin tb/programs/$(PROGRAM).hex
+
+# $(OBJDUMP) -d build/$(PROGRAM).elf
+
 tb_cpu:
 	mkdir -p $(BUILD_DIR) $(WAVE_DIR)
 	$(IVERILOG) -o $(BUILD_DIR)/tb_cpu $(TB_DIR)/tb_cpu.v $(RTL_DIR)/*.v
@@ -52,6 +72,9 @@ tb_cpu:
 
 # Run all tests
 test_all: tb_alu tb_regfile tb_imm_gen tb_control
+
+# Test CPU from assembly
+test_full: program tb_cpu
 
 # Open waveforms
 wave_alu:

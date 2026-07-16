@@ -61,10 +61,10 @@ module tb_cpu;
         end
         #1;
 
-        check("x1", dut.rf.regs[1], 32'd5);
+        check("x1", dut.rf.regs[1], 32'd6);
         check("x2", dut.rf.regs[2], 32'd4);
-        check("x3", dut.rf.regs[3], 32'd9);
-        check("mem[0]", dut.dmem.mem[0], 32'd9);
+        check("x3", dut.rf.regs[3], 32'd10);
+        check("mem[0]", dut.dmem.mem[0], 32'd10);
 
         // Test 2: instructions 5-8
         /*
@@ -78,8 +78,8 @@ module tb_cpu;
         end
         #1;
 
-        check("x1", dut.rf.regs[1], 32'd2);
-        check("x2", dut.rf.regs[2], 32'd9);
+        check("x1", dut.rf.regs[1], 32'd3);
+        check("x2", dut.rf.regs[2], 32'd10);
         check("x3", dut.rf.regs[3], 32'd7);
         check("mem[1]", dut.dmem.mem[1], 32'd7);
 
@@ -116,8 +116,8 @@ module tb_cpu;
          * slli  x12, x9, 4
          * slt   x13, x1, x2
          * sltu  x14, x1, x2
-         * slti  x15, x2, 10
-         * sltiu x16, x2, 10
+         * slti  x15, x2, 11
+         * sltiu x16, x2, 11
         */
         repeat(8) begin
             @(posedge clk);
