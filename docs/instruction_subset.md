@@ -1,6 +1,7 @@
 # Instruction Subset
 
-This document lists the instructions supported or decoded by the current RTL.
+This document lists the instructions implemented by the current RTL. The core
+implements a tested subset of RV32I; it is not a complete RV32I implementation.
 
 ## R-type
 
@@ -138,16 +139,26 @@ imm = {{19{instr[31]}}, instr[31], instr[7], instr[30:25], instr[11:8], 1'b0}
 | `bne` | `001` | decoded and branch condition present |
 | `blt` | `100` | decoded and branch condition present |
 | `bge` | `101` | decoded and branch condition present |
-| `bltu` | `110` | decoded by `control.v`, not implemented in `cpu.v` branch condition |
-| `bgeu` | `111` | decoded by `control.v`, not implemented in `cpu.v` branch condition |
+| `bltu` | `110` | supported with an unsigned comparison |
+| `bgeu` | `111` | supported with an unsigned comparison |
 
-Current branch target:
+`cpu.v` evaluates branch conditions using the values read from the register
+file (`rv1` and `rv2`):
 
 ```verilog
-pc_next = pc + imm
+case (func3)
+    3'b000: branch_taken = branch && (rv1 == rv2);                  // beq
+    3'b001: branch_taken = branch && (rv1 != rv2);                  // bne
+    3'b100: branch_taken = branch && ($signed(rv1) < $signed(rv2)); // blt
+    3'b101: branch_taken = branch && ($signed(rv1) >= $signed(rv2));// bge
+    3'b110: branch_taken = branch && (rv1 < rv2);                   // bltu
+    3'b111: branch_taken = branch && (rv1 >= rv2);                  // bgeu
+    default: branch_taken = 1'b0;
+endcase
 ```
 
-Note: `cpu.v` currently compares `rs1`/`rs2` register indexes instead of `rv1`/`rv2` register values in `branch_taken`. Fix that before treating branches as fully functional end-to-end.
+When a branch is taken, `pc.v` adds the sign-extended B-type immediate to the
+current PC.
 
 ## U-type LUI
 
@@ -162,15 +173,9 @@ Opcode: `0110111`
 
 | Instruction | Status |
 |:---|:---|
-| `lui` | decoded, but immediate generation is not standard RISC-V yet |
+| `lui` | supported; writes the upper immediate to `rd` |
 
 Current `imm_gen.v`:
-
-```verilog
-imm = {{20{instr[31]}}, instr[31:12]}
-```
-
-Standard RISC-V `lui` should be:
 
 ```verilog
 imm = {instr[31:12], 12'b0}
@@ -210,19 +215,23 @@ Opcode: `1100111`
 
 | Instruction | funct3 | Status |
 |:---|:---:|:---|
-| `jalr` | `000` | decoded, but PC target path is not fully implemented |
+| `jalr` | `000` | supported as `rd = PC + 4`, `PC = (rs1 + imm) & ~1` |
 
-Current `pc.v` supports:
-
-```verilog
-pc_next = pc + imm
-```
-
-Standard RISC-V `jalr` needs:
+For `jalr`, `cpu.v` converts the absolute target into the PC-relative value
+expected by `pc.v`:
 
 ```verilog
-pc_next = (rs1 + imm) & ~32'b1
+pc_imm = (((rv1 + imm) & 32'hffff_fffe) - pc_curr)
 ```
+
+`pc.v` then updates the PC with:
+
+```verilog
+pc <= pc + pc_imm
+```
+
+Together, these expressions produce the standard `jalr` target
+`(rs1 + imm) & ~1`.
 
 ## ALU Control Encoding
 
@@ -239,13 +248,8 @@ pc_next = (rs1 + imm) & ~32'b1
 | `4'h8` | slt |
 | `4'h9` | sltu |
 
-## Current CPU Test Program
 
-`tb/programs/cpu_test.hex` currently contains:
+An unsupported R-type `funct7`/`funct3` combination still enables register write and uses the control unit's default ALU operation. It should not be treated as a supported instruction.
 
-```text
-00500093
-00400113
-```
+An unrecognized opcode leaves all control outputs inactive, so it performs no register or memory write and the PC advances by 4.
 
-These are I-type arithmetic instructions, so they use the `OP_IMM` path.
