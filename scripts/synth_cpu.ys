@@ -1,0 +1,26 @@
+read_verilog rtl/pc.v
+read_verilog rtl/instr_mem.v
+read_verilog rtl/control.v
+read_verilog rtl/regfile.v
+read_verilog rtl/imm_gen.v
+read_verilog rtl/alu.v
+read_verilog rtl/data_mem.v
+read_verilog rtl/cpu.v
+
+hierarchy -top cpu
+
+proc
+opt
+fsm
+opt
+memory
+opt
+techmap
+opt
+abc
+opt
+
+stat
+
+write_verilog -noattr build/cpu_synth.v
+write_blif build/cpu.blif

@@ -105,3 +105,8 @@ wave_cpu:
 clean:
 	rm -rf $(BUILD_DIR)
 	rm -f $(WAVE_DIR)/*.vcd
+
+# Yosys Scripts
+synth_cpu:
+	mkdir -p build
+	yosys -s scripts/synth_cpu.ys
