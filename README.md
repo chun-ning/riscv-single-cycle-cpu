@@ -38,6 +38,7 @@ Install the following command-line tools:
 
 - `make`
 - Icarus Verilog: `iverilog` and `vvp`
+- Yosys: `yosys` (for RTL synthesis)
 - Python 3: `python3`
 - A bare-metal RISC-V GNU toolchain providing:
   - `riscv64-unknown-elf-as`
@@ -51,6 +52,7 @@ Check that the required tools are available:
 ```bash
 which iverilog
 which vvp
+which yosys
 which python3
 which riscv64-unknown-elf-as
 which riscv64-unknown-elf-ld
@@ -81,6 +83,53 @@ To inspect the generated ELF file:
 ```bash
 riscv64-unknown-elf-objdump -d -M numeric build/cpu_test.elf
 ```
+
+## Scripts and commands
+
+### Assembly binary to instruction-memory hex
+
+The `tools/bin_to_hex.py` script converts a raw little-endian RISC-V binary into the hexadecimal word format loaded by `$readmemh`:
+
+```bash
+python3 tools/bin_to_hex.py build/cpu_test.bin tb/programs/cpu_test.hex
+```
+
+The Makefile runs this script as part of:
+
+```bash
+make program
+```
+
+You can build another matching assembly file by overriding `PROGRAM`. For example, this command builds `asm/add_test.s` and generates `tb/programs/add_test.hex`:
+
+```bash
+make program PROGRAM=add_test
+```
+
+### CPU synthesis with Yosys
+
+The `scripts/synth_cpu.ys` script reads the RTL modules, selects `cpu` as the top module, runs Yosys synthesis and optimization passes, and prints synthesis statistics.
+
+Run it through the Makefile with:
+
+```bash
+make synth_cpu
+```
+
+The equivalent direct command is:
+
+```bash
+yosys -s scripts/synth_cpu.ys
+```
+
+The synthesis script generates:
+
+```text
+build/cpu_synth.v  Synthesized Verilog netlist
+build/cpu.blif     Synthesized BLIF netlist
+```
+
+The current `cpu` top module has only `clk` and `reset` inputs and no output ports. Yosys therefore considers its internal behavior unobservable and optimizes the instantiated CPU logic out of the final top module. Add observable CPU outputs or a board-level wrapper before using these netlists for FPGA implementation.
 
 ## Build steps
 
@@ -160,8 +209,9 @@ These targets open the corresponding `.vcd` file with GTKWave.
 ```text
 rtl/          Verilog CPU modules
 tb/           Verilog behavioral testbenches
-tb/programs/  Hex machine-code files loaded into instruction memorys
+tb/programs/  Hex machine-code files loaded into instruction memory
 asm/          RISC-V assembly programs
+scripts/      Yosys synthesis scripts
 tools/        Binary-to-hex conversion utility
 docs/         Design diagrams and project notes
 build/        Generated simulation and program files
