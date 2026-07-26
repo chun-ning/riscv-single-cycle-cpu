@@ -4,11 +4,26 @@ module tb_cpu;
     reg clk = 1'b0;
     reg reset;
 
+    wire [31:0] debug_pc;
+    wire [31:0] debug_instr;
+    wire [31:0] debug_alu_result;
+    wire [31:0] debug_writeback_data;
+    wire [4:0]  debug_writeback_rd;
+    wire        debug_reg_write;
+    wire        debug_mem_write;
+
     integer errors;
 
     cpu dut (
-        .clk(clk),
-        .reset(reset)
+        .clk                  (clk),
+        .reset                (reset),
+        .debug_pc             (debug_pc),
+        .debug_instr          (debug_instr),
+        .debug_alu_result     (debug_alu_result),
+        .debug_writeback_data (debug_writeback_data),
+        .debug_writeback_rd   (debug_writeback_rd),
+        .debug_reg_write      (debug_reg_write),
+        .debug_mem_write      (debug_mem_write)
     );
 
     always begin

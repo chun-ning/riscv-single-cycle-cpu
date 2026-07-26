@@ -1,6 +1,14 @@
 module cpu(
     input clk,
-    input reset
+    input reset,
+
+    output wire [31:0] debug_pc,
+    output wire [31:0] debug_instr,
+    output wire [31:0] debug_alu_result,
+    output wire [31:0] debug_writeback_data,
+    output wire [4:0]  debug_writeback_rd,
+    output wire        debug_reg_write,
+    output wire        debug_mem_write
 );
 
     // pc
@@ -160,5 +168,14 @@ module cpu(
         (result_src == 2'b10) ? pc_plus_4 :
         (result_src == 2'b11) ? imm :
         32'd0;
+    
+    // Outputs for debugging
+    assign debug_pc             = pc_curr;
+    assign debug_instr          = instr;
+    assign debug_alu_result     = out;
+    assign debug_writeback_data = w_data;
+    assign debug_writeback_rd   = rd;
+    assign debug_reg_write      = reg_write;
+    assign debug_mem_write      = mem_write;
 
 endmodule

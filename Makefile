@@ -70,6 +70,12 @@ tb_cpu:
 	$(IVERILOG) -o $(BUILD_DIR)/tb_cpu $(TB_DIR)/tb_cpu.v $(RTL_DIR)/*.v
 	$(VVP) $(BUILD_DIR)/tb_cpu
 
+# SystemVerilog CPU testbench
+tb_cpu_sys:
+	mkdir -p $(BUILD_DIR) $(WAVE_DIR)
+	$(IVERILOG) -g2012 -s tb_cpu_sys -o $(BUILD_DIR)/tb_cpu_sys $(TB_DIR)/tb_cpu_sys.sv $(RTL_DIR)/*.v
+	$(VVP) $(BUILD_DIR)/tb_cpu_sys
+
 # Run all tests
 test_all: tb_alu tb_regfile tb_imm_gen tb_control
 
@@ -100,6 +106,9 @@ wave_instr_mem:
 
 wave_cpu:
 	$(GTKWAVE) $(WAVE_DIR)/cpu.vcd
+
+wave_cpu_sys:
+	$(GTKWAVE) $(WAVE_DIR)/cpu_sys.vcd
 
 # Clean generated files
 clean:
