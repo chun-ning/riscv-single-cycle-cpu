@@ -218,4 +218,4 @@ build/        Generated simulation and program files
 waves/        Generated VCD waveforms
 ```
 
-![RV32I datapath](docs/rv32i_datapath.png)
+<img src="docs/rv32i_datapath.png" alt="RV32I datapath" width="100%">
