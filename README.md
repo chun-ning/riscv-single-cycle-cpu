@@ -217,5 +217,11 @@ docs/         Design diagrams and project notes
 build/        Generated simulation and program files
 waves/        Generated VCD waveforms
 ```
-
+## RV32I CPU Datapath & Control
 <img src="docs/rv32i_datapath.png" alt="RV32I datapath" width="100%">
+
+## Copyright
+
+Copyright © 2026 Chun-Ning Kao. All rights reserved.
+
+The source code is publicly available for viewing and referencing, but no license is granted for copying, modification, or redistribution.
