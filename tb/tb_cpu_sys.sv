@@ -15,6 +15,7 @@ module tb_cpu_sys;
     logic [4:0]  debug_writeback_rd;
     logic        debug_reg_write;
     logic        debug_mem_write;
+    logic        functional_coverage_complete;
 
     int unsigned checks;
     int unsigned errors;
@@ -42,6 +43,19 @@ module tb_cpu_sys;
         .debug_writeback_rd (debug_writeback_rd),
         .debug_reg_write (debug_reg_write),
         .debug_mem_write (debug_mem_write)
+    );
+
+    cpu_coverage coverage (
+        .clk               (clk),
+        .reset             (reset),
+        .instruction       (debug_instr),
+        .rv1               (dut.rv1),
+        .rv2               (dut.rv2),
+        .immediate         (dut.imm),
+        .alu_ctrl          (dut.alu_ctrl),
+        .branch_taken      (dut.branch_taken),
+        .writeback_rd      (debug_writeback_rd),
+        .coverage_complete (functional_coverage_complete)
     );
 
     // Clock init: period = 10ns
@@ -172,6 +186,63 @@ module tb_cpu_sys;
                  (opcode == OPCODE_JALR));
         end
     endfunction
+
+    function automatic logic [31:0] encode_addi(
+        input logic [4:0] rd,
+        input integer     immediate
+    );
+        encode_addi = {immediate[11:0], 5'd0, 3'b000, rd, OPCODE_OP_IMM};
+    endfunction
+
+    function automatic logic [31:0] encode_branch(
+        input logic [2:0] funct3,
+        input logic [4:0] rs1,
+        input logic [4:0] rs2,
+        input integer     offset
+    );
+        logic [12:0] branch_immediate;
+        begin
+            branch_immediate = offset[12:0];
+            encode_branch = {
+                branch_immediate[12],
+                branch_immediate[10:5],
+                rs2,
+                rs1,
+                funct3,
+                branch_immediate[4:1],
+                branch_immediate[11],
+                OPCODE_BRANCH
+            };
+        end
+    endfunction
+
+    task automatic run_branch_coverage_case(
+        input string       case_name,
+        input logic [2:0]  funct3,
+        input integer      lhs,
+        input integer      rhs,
+        input logic        expected_taken
+    );
+        logic [31:0] expected_pc;
+        begin
+            // Reset to PC=0, then run two ADDI setup instructions followed by
+            // the branch under test. A taken branch skips from PC=8 to PC=16.
+            reset = 1'b1;
+            run_cycles(1);
+
+            dut.imem.mem[0] = encode_addi(5'd1, lhs);
+            dut.imem.mem[1] = encode_addi(5'd2, rhs);
+            dut.imem.mem[2] = encode_branch(funct3, 5'd1, 5'd2, 8);
+            dut.imem.mem[3] = 32'h0000_0013;
+            dut.imem.mem[4] = 32'h0000_0013;
+
+            reset = 1'b0;
+            run_cycles(3);
+
+            expected_pc = expected_taken ? 32'd16 : 32'd12;
+            check(case_name, debug_pc, expected_pc);
+        end
+    endtask
 
     // CPU uses synchronous reset: records reset value at posedge (later checked at negedge to ensure CPU has seen the reset)
     initial sampled_reset = 1'b0;
@@ -431,6 +502,17 @@ module tb_cpu_sys;
         check("x20 final",    dut.rf.regs[20], 32'd17);
         check("x30 final",    dut.rf.regs[30], 32'd0);
         check("mem[4] final", dut.dmem.mem[4], 32'd0);
+
+        $display("\nFUNCTIONAL COVERAGE CLOSURE");
+        run_branch_coverage_case("BGE not taken",  3'b101, -1, 1, 1'b0);
+        run_branch_coverage_case("BLTU taken",     3'b110,  1, 2, 1'b1);
+        run_branch_coverage_case("BGEU not taken", 3'b111,  1, 2, 1'b0);
+
+        coverage.report();
+        if (!functional_coverage_complete) begin
+            errors++;
+            $error("FUNCTIONAL COVERAGE GOAL NOT MET");
+        end
 
         // Final summary
         $display("\nCPU SYSTEMVERILOG TEST SUMMARY: checks=%0d errors=%0d",

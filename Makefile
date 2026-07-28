@@ -70,10 +70,10 @@ tb_cpu:
 	$(IVERILOG) -o $(BUILD_DIR)/tb_cpu $(TB_DIR)/tb_cpu.v $(RTL_DIR)/*.v
 	$(VVP) $(BUILD_DIR)/tb_cpu
 
-# SystemVerilog CPU testbench
+# SystemVerilog CPU testbench + coverage monitoring
 tb_cpu_sys:
 	mkdir -p $(BUILD_DIR) $(WAVE_DIR)
-	$(IVERILOG) -g2012 -s tb_cpu_sys -o $(BUILD_DIR)/tb_cpu_sys $(TB_DIR)/tb_cpu_sys.sv $(RTL_DIR)/*.v
+	$(IVERILOG) -g2012 -s tb_cpu_sys -o $(BUILD_DIR)/tb_cpu_sys $(TB_DIR)/cpu_coverage.sv $(TB_DIR)/tb_cpu_sys.sv $(RTL_DIR)/*.v
 	$(VVP) $(BUILD_DIR)/tb_cpu_sys
 
 # Run all tests
