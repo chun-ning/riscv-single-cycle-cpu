@@ -2,11 +2,14 @@
 `default_nettype none
 
 module cpu_reference_model (
+    input logic        clk,
+    input logic        reset,
     input logic [31:0] debug_pc,
     input logic [31:0] debug_instr,
     input logic [31:0] actual_regs [0:31],
     input logic [31:0] actual_mem [0:511],
-    output logic [31:0] reference_complete
+    output logic reference_complete,
+    output logic [31:0] mismatch_count
 );
     localparam logic [6:0] OPCODE_LUI    = 7'b0110111;
     localparam logic [6:0] OPCODE_OP     = 7'b0110011;
@@ -21,6 +24,18 @@ module cpu_reference_model (
     logic [31:0] reference_regs [0:31];
     logic [31:0] reference_mem [0:511];
 
+    // Reset reference model
+    task automatic reset_model;
+        reference_pc = 32'd0;
+
+        for (int i = 0; i < 32; i++)
+            reference_regs[i] = 32'd0;
+
+        for (int i = 0; i < 512; i++)
+            reference_mem[i] = 32'd0;
+    endtask
+
+    // Modeling instructions
     task automatic model_step (input logic [31:0] instruction);
         logic [6:0] opcode = instruction[6:0];
         logic [4:0] rd     = instruction[11:7];
@@ -224,12 +239,11 @@ module cpu_reference_model (
         reference_pc = next_pc;
     endtask
 
+    // Assert DUT state matches with reference model
     task automatic compare_state;
-        reference_complete = 32'd1;
-
         assert (debug_pc === reference_pc)
         else begin
-            reference_complete = 32'd0;
+            mismatch_count++;
             $error("PC mismatch: DUT=%08h REF=%08h INSTR=%08h",
                    debug_pc, reference_pc, debug_instr);
         end
@@ -237,7 +251,7 @@ module cpu_reference_model (
         for (int i = 0; i < 32; i++) begin
             assert (actual_regs[i] === reference_regs[i])
             else begin
-                reference_complete = 32'd0;
+                mismatch_count++;
                 $error("Register x%0d mismatch: DUT=%08h REF=%08h PC=%08h INSTR=%08h",
                        i, actual_regs[i], reference_regs[i],
                        debug_pc, debug_instr);
@@ -247,12 +261,38 @@ module cpu_reference_model (
         for (int i = 0; i < 512; i++) begin
             assert (actual_mem[i] === reference_mem[i])
             else begin
-                reference_complete = 32'd0;
+                mismatch_count++;
                 $error("Memory word %0d mismatch: DUT=%08h REF=%08h PC=%08h INSTR=%08h",
                        i, actual_mem[i], reference_mem[i],
                        debug_pc, debug_instr);
             end
         end
+
+        reference_complete = (mismatch_count == 32'd0);
     endtask
 
+    // Initialize 
+    initial begin
+        mismatch_count     = 32'd0;
+        reference_complete = 1'b1;
+        reset_model();
+    end
+
+    // Capture the instruction executing at this posedge
+    always @(posedge clk) begin : reference_scoreboard
+        logic [31:0] executing_instruction;
+
+        executing_instruction = debug_instr;
+
+        if (reset)
+            reset_model();
+        else
+            model_step(executing_instruction);
+
+        #1ps; // Compares with ref model before testbench reports
+        compare_state();
+    end
+
 endmodule
+
+`default_nettype wire

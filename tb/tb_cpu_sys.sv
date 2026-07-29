@@ -16,6 +16,8 @@ module tb_cpu_sys;
     logic        debug_reg_write;
     logic        debug_mem_write;
     logic        functional_coverage_complete;
+    logic        reference_model_complete;
+    logic [31:0] reference_mismatch_count;
 
     int unsigned checks;
     int unsigned errors;
@@ -46,23 +48,34 @@ module tb_cpu_sys;
     );
 
     cpu_coverage coverage (
-        .clk               (clk),
-        .reset             (reset),
-        .instruction       (debug_instr),
-        .rv1               (dut.rv1),
-        .rv2               (dut.rv2),
-        .immediate         (dut.imm),
-        .alu_ctrl          (dut.alu_ctrl),
-        .branch_taken      (dut.branch_taken),
-        .writeback_rd      (debug_writeback_rd),
+        .clk (clk),
+        .reset (reset),
+        .instruction (debug_instr),
+        .rv1 (dut.rv1),
+        .rv2 (dut.rv2),
+        .immediate (dut.imm),
+        .alu_ctrl (dut.alu_ctrl),
+        .branch_taken (dut.branch_taken),
+        .writeback_rd (debug_writeback_rd),
         .coverage_complete (functional_coverage_complete)
+    );
+    
+    // Reference model
+    cpu_reference_model reference_model (
+        .clk (clk),
+        .reset (reset),
+        .debug_pc (debug_pc),
+        .debug_instr (debug_instr),
+        .actual_regs (dut.rf.regs),
+        .actual_mem  (dut.dmem.mem),
+        .reference_complete (reference_model_complete),
+        .mismatch_count (reference_mismatch_count)
     );
 
     // Clock init: period = 10ns
     initial clk = 1'b0;
     always #(CLK_PERIOD / 2) clk = ~clk;
 
-    // Stop a hung test instead of allowing the simulator to run forever.
     // Max possible number of instructions executed ～80 (80*10ns = 800ns) --> TIMEOUT set to 1500ns
     initial begin : timeout
         #(TIMEOUT);
@@ -251,8 +264,8 @@ module tb_cpu_sys;
 
     // Initilize JALR tracking variables
     initial begin
-        jalr_pending    = 1'b0;
-        expected_jalr_pc = 32'd0;
+        jalr_pending <= 1'b0;
+        expected_jalr_pc <= 32'd0;
     end
 
     always @(negedge clk) begin : architectural_invariants
@@ -512,6 +525,13 @@ module tb_cpu_sys;
         if (!functional_coverage_complete) begin
             errors++;
             $error("FUNCTIONAL COVERAGE GOAL NOT MET");
+        end
+
+        $display("REFERENCE MODEL REPORT: mismatches=%0d",
+                 reference_mismatch_count);
+        if (!reference_model_complete) begin
+            errors++;
+            $error("REFERENCE MODEL SCOREBOARD FAILED");
         end
 
         // Final summary
